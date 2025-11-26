@@ -61,7 +61,7 @@ def request_to_giga_chat(request:str) -> Optional[str]:
         except Exception as e:
             raise TypeError(f"Error : {e}")
     else:
-        print(f"Произошла ошибка: {response.text}")    
+       return ""
     
 app = FastAPI()
 @app.get("/")
@@ -94,7 +94,10 @@ async def answer_request(req:Answer,x_signature:str = Header(...),x_timestamp:st
     if not verify_signature(req.model_dump(),x_signature,x_timestamp):
         raise HTTPException(status_code = 401,detail = "Invalid signature")
     try:
-        pass
+        response = request_to_giga_chat(req.request)
+        if response != "":
+            return response
+        raise HTTPException(status_code = 400,detail = "Error while asking gigachat")
     except Exception as e:
         raise HTTPException(status_code = 400,detail = f"Error : {e}")
     
