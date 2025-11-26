@@ -17,6 +17,13 @@ def get_api_key() -> str:
         return data["api"]    
     except Exception as e:
         raise KeyError("No such key")
+def get_giga_chat_token() -> str:
+    try:
+        with open(secrets_path,"r") as file:
+            data = json.load(file)
+        return data["gigachat"]    
+    except Exception as e:
+        raise KeyError("No suck key")    
 
 def get_signature_key() -> str:
     try:
@@ -25,6 +32,36 @@ def get_signature_key() -> str:
         return data["signature"]    
     except Exception as e:
         raise KeyError("No such key")
+    
+
+def request_to_giga_chat(request:str) -> Optional[str]:
+    API_URL = "https://api.gigachat.ai/v1/completions"  # URL конечной точки API
+    API_KEY = get_giga_chat_token()  # токен доступа к API
+
+    payload = {
+        "model": "GigaChat",  # Указываем используемую модель
+        "messages": [
+            {"role": "system", "content": "Ты эксперт по программированию."},
+            {"role": "user", "content": request}
+        ]
+    }
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(API_URL, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        result = response.json()
+        print(result["choices"][0]["message"]["content"])
+        try:
+            return str(result["choices"][0]["message"]["content"])
+        except Exception as e:
+            raise TypeError(f"Error : {e}")
+    else:
+        print(f"Произошла ошибка: {response.text}")    
     
 app = FastAPI()
 @app.get("/")
