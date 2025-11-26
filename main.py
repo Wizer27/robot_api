@@ -5,6 +5,8 @@ import hashlib
 import json
 import time
 import requests
+from pydantic import BaseModel
+from typing import List,Optional
 
 secrets_path = "data/secrets.json"
 
@@ -46,4 +48,16 @@ def verify_signature(data:dict,signature:str,timestamp:str) -> bool:
     expected_signature = hmac.new(KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected_signature,signature)
 #-----SECURITY-----
+
+class Answer(BaseModel):
+    request:str
+
+@app.post("/answer")
+async def answer_request(req:Answer,x_signature:str = Header(...),x_timestamp:str = Header()):
+    if not verify_signature(req.model_dump(),x_signature,x_timestamp):
+        raise HTTPException(status_code = 401,detail = "Invalid signature")
+    try:
+        pass
+    except Exception as e:
+        raise HTTPException(status_code = 400,detail = f"Error : {e}")
     
