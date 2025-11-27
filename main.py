@@ -84,7 +84,7 @@ def verify_signature(data:dict,signature:str,timestamp:str) -> bool:
 
     data_str = json.dumps(data_to_verify, sort_keys=True, separators=(',', ':'))
     expected_signature = hmac.new(KEY.encode(), data_str.encode(), hashlib.sha256).hexdigest()
-    return compare_digest(expected_signature,signature)
+    return hmac.compare_digest(expected_signature,signature)
 #-----SECURITY-----
 
 class Answer(BaseModel):
