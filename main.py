@@ -9,8 +9,21 @@ from pydantic import BaseModel
 from typing import List,Optional
 from secrets import compare_digest
 
+
+
+
 secrets_path = "data/secrets.json"
 
+
+def try_excpet_decorator(func):
+    def main_func(*args,**kwargs):
+        try:
+            func()
+        except Exception as e:
+            raise Exception(e)  
+    return main_func      
+
+@try_excpet_decorator
 def get_api_key() -> str:
     try:
         with open(secrets_path,"r") as file:
@@ -18,6 +31,7 @@ def get_api_key() -> str:
         return data["api"]    
     except Exception as e:
         raise KeyError("No such key")
+@try_excpet_decorator    
 def get_giga_chat_token() -> str:
     try:
         with open(secrets_path,"r") as file:
@@ -25,7 +39,7 @@ def get_giga_chat_token() -> str:
         return data["gigachat"]    
     except Exception as e:
         raise KeyError("No suck key")    
-
+@try_excpet_decorator
 def get_signature_key() -> str:
     try:
         with open(secrets_path,"r") as file:
@@ -35,6 +49,9 @@ def get_signature_key() -> str:
         raise KeyError("No such key")
     
 
+
+    
+@try_excpet_decorator
 def request_to_giga_chat(request:str) -> Optional[str]:
     API_URL = "https://api.gigachat.ai/v1/completions"  # URL конечной точки API
     API_KEY = get_giga_chat_token()  # токен доступа к API
