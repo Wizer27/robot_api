@@ -118,4 +118,5 @@ async def answer_request(req:Answer,x_signature:str = Header(...),x_timestamp:st
         raise HTTPException(status_code = 400,detail = "Error while asking gigachat")
     except Exception as e:
         raise HTTPException(status_code = 400,detail = f"Error : {e}")
-    
+if __name__ == "__main__":
+    uvicorn.run(app,host = "0.0.0.0",port = 8080)   
