@@ -32,4 +32,4 @@ def ask_ai(message:str):
         "X-Timestamp":str(int(time.time()))
     }
     resp = requests.post(f"{API_URL}/answer",json = data,headers=headers)
-    return resp.json()
+    return resp.json()["answer"]

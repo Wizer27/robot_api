@@ -114,7 +114,9 @@ async def answer_request(req:Answer,x_signature:str = Header(...),x_timestamp:st
     try:
         response = request_to_giga_chat(req.request)
         if response != "":
-            return response
+            return {
+                "answer":response
+            }
         raise HTTPException(status_code = 400,detail = "Error while asking gigachat")
     except Exception as e:
         raise HTTPException(status_code = 400,detail = f"Error : {e}")
