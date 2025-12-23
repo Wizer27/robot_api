@@ -8,8 +8,7 @@ import requests
 from pydantic import BaseModel
 from typing import List,Optional
 from secrets import compare_digest
-
-
+from gigachat import GigaChat
 
 
 secrets_path = "data/secrets.json"
@@ -23,7 +22,7 @@ def try_excpet_decorator(func):
             raise Exception(e)  
     return main_func      
 
-@try_excpet_decorator
+
 def get_api_key() -> str:
     try:
         with open(secrets_path,"r") as file:
@@ -31,15 +30,8 @@ def get_api_key() -> str:
         return data["api"]    
     except Exception as e:
         raise KeyError("No such key")
-@try_excpet_decorator    
-def get_giga_chat_token() -> str:
-    try:
-        with open(secrets_path,"r") as file:
-            data = json.load(file)
-        return data["gigachat"]    
-    except Exception as e:
-        raise KeyError("No suck key")    
-@try_excpet_decorator
+
+
 def get_signature_key() -> str:
     try:
         with open(secrets_path,"r") as file:
@@ -47,39 +39,17 @@ def get_signature_key() -> str:
         return data["signature"]    
     except Exception as e:
         raise KeyError("No such key")
-    
 
 
-    
-@try_excpet_decorator
-def request_to_giga_chat(request:str) -> Optional[str]:
-    API_URL = "https://api.gigachat.ai/v1/completions"  # URL конечной точки API
-    API_KEY = get_giga_chat_token()  # токен доступа к API
 
-    payload = {
-        "model": "GigaChat",  # Указываем используемую модель
-        "messages": [
-            {"role": "system", "content": "Ты эксперт по программированию."},
-            {"role": "user", "content": request}
-        ]
-    }
+giga = GigaChat(credentials=get_api_key(), model='GigaChat-2')
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+        
 
-    response = requests.post(API_URL, json=payload, headers=headers)
-
-    if response.status_code == 200:
-        result = response.json()
-        print(result["choices"][0]["message"]["content"])
-        try:
-            return str(result["choices"][0]["message"]["content"])
-        except Exception as e:
-            raise TypeError(f"Error : {e}")
-    else:
-       return ""
+def ask_2(request:str) -> str:
+    with GigaChat(credentials=get_api_key(), verify_ssl_certs=False) as giga:
+        response = giga.chat("Какие факторы влияют на стоимость страховки на дом?")
+        return response.choices[0].message.content
     
 app = FastAPI()
 @app.get("/")
@@ -93,7 +63,7 @@ async def safe_get(req:Request):
     
 
 def verify_signature(data:dict,signature:str,timestamp:str) -> bool:
-    if int(time.time) - int(timestamp) > 300:
+    if int(time.time()) - int(timestamp) > 300:
         return False
     KEY = get_signature_key()
     data_to_verify = data.copy()
@@ -112,7 +82,7 @@ async def answer_request(req:Answer,x_signature:str = Header(...),x_timestamp:st
     if not verify_signature(req.model_dump(),x_signature,x_timestamp):
         raise HTTPException(status_code = 401,detail = "Invalid signature")
     try:
-        response = request_to_giga_chat(req.request)
+        response = ask_2(req.request)
         if response != "":
             return {
                 "answer":response
